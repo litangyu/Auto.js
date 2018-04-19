@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -18,42 +17,37 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.qq.e.ads.ADActivity;
-import com.qq.e.comm.DownloadService;
 import com.stardust.app.FragmentPagerAdapterBuilder;
 import com.stardust.app.OnActivityResultDelegate;
 import com.stardust.enhancedfloaty.FloatyService;
 import com.stardust.pio.PFiles;
-import com.stardust.scriptdroid.BuildConfig;
 import com.stardust.scriptdroid.Pref;
 import com.stardust.scriptdroid.R;
 import com.stardust.scriptdroid.autojs.AutoJs;
-import com.stardust.scriptdroid.ui.common.NotAskAgainDialog;
-import com.stardust.scriptdroid.ui.doc.DocsFragment_;
-import com.stardust.scriptdroid.ui.floating.FloatyWindowManger;
 import com.stardust.scriptdroid.storage.file.StorageFileProvider;
-import com.stardust.scriptdroid.ui.main.community.CommunityFragment;
-import com.stardust.scriptdroid.ui.main.community.CommunityFragment_;
-import com.stardust.scriptdroid.ui.log.LogActivity_;
-import com.stardust.scriptdroid.ui.main.sample.SampleListFragment_;
-import com.stardust.scriptdroid.ui.main.scripts.MyScriptListFragment_;
-import com.stardust.scriptdroid.ui.main.task.TaskManagerFragment_;
-import com.stardust.theme.ThemeColorManager;
-import com.stardust.theme.dialog.ThemeColorMaterialDialogBuilder;
-import com.stardust.util.DeveloperUtils;
 import com.stardust.scriptdroid.tool.AccessibilityServiceTool;
 import com.stardust.scriptdroid.ui.BaseActivity;
-import com.stardust.scriptdroid.ui.settings.SettingsActivity_;
+import com.stardust.scriptdroid.ui.common.NotAskAgainDialog;
+import com.stardust.scriptdroid.ui.doc.DocsFragment;
+import com.stardust.scriptdroid.ui.floating.FloatyWindowManger;
+import com.stardust.scriptdroid.ui.log.LogActivity_;
+import com.stardust.scriptdroid.ui.main.community.CommunityFragment;
+import com.stardust.scriptdroid.ui.main.sample.SampleListFragment;
+import com.stardust.scriptdroid.ui.main.scripts.MyScriptListFragment;
+import com.stardust.scriptdroid.ui.main.task.TaskManagerFragment;
+import com.stardust.scriptdroid.ui.settings.SettingsActivity;
 import com.stardust.scriptdroid.ui.update.VersionGuard;
-import com.stardust.util.BackPressedHandler;
-import com.stardust.util.DrawerAutoClose;
 import com.stardust.scriptdroid.ui.widget.CommonMarkdownView;
 import com.stardust.scriptdroid.ui.widget.SearchViewItem;
+import com.stardust.theme.ThemeColorManager;
+import com.stardust.util.BackPressedHandler;
+import com.stardust.util.DrawerAutoClose;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
+import org.eclipse.egit.github.core.service.DownloadService;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -132,7 +126,7 @@ public class MainActivity extends BaseActivity implements OnActivityResultDelega
     }
 
     private void checkPermissions() {
-        checkPermission(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_EXTERNAL_STORAGE);
+        checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
     }
 
     private void showAccessibilitySettingPromptIfDisabled() {
@@ -162,11 +156,11 @@ public class MainActivity extends BaseActivity implements OnActivityResultDelega
     private void setUpTabViewPager() {
         TabLayout tabLayout = $(R.id.tab);
         mPagerAdapter = new FragmentPagerAdapterBuilder(this)
-                .add(new MyScriptListFragment_(), R.string.text_script)
-                .add(new DocsFragment_(), R.string.text_tutorial)
-                .add(new CommunityFragment_(), R.string.text_community)
-                .add(new SampleListFragment_(), R.string.text_sample)
-                .add(new TaskManagerFragment_(), R.string.text_manage)
+                .add(new MyScriptListFragment(), R.string.text_script)
+                .add(new DocsFragment(), R.string.text_tutorial)
+                .add(new CommunityFragment(), R.string.text_community)
+                .add(new SampleListFragment(), R.string.text_sample)
+                .add(new TaskManagerFragment(), R.string.text_manage)
                 .build();
         mViewPager.setAdapter(mPagerAdapter);
         tabLayout.setupWithViewPager(mViewPager);
@@ -200,7 +194,7 @@ public class MainActivity extends BaseActivity implements OnActivityResultDelega
 
     @Click(R.id.setting)
     void startSettingActivity() {
-        startActivity(new Intent(this, SettingsActivity_.class));
+        startActivity(new Intent(this, SettingsActivity.class));
     }
 
     @Click(R.id.exit)
@@ -235,18 +229,6 @@ public class MainActivity extends BaseActivity implements OnActivityResultDelega
         if (getGrantResult(Manifest.permission.READ_EXTERNAL_STORAGE, permissions, grantResults) == PackageManager.PERMISSION_GRANTED) {
             StorageFileProvider.getDefault().notifyStoragePermissionGranted();
         }
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED) {
-            new ThemeColorMaterialDialogBuilder(this)
-                    .title(R.string.text_no_phone_state_permission)
-                    .content(R.string.info_no_phone_state_permission)
-                    .positiveText(R.string.text_request_permission)
-                    .negativeText(R.string.text_exit)
-                    .cancelable(false)
-                    .onPositive(((dialog, which) -> checkPermissions()))
-                    .onNegative((dialog, which) -> finish())
-                    .show();
-        }
     }
 
     private int getGrantResult(String permission, String[] permissions, int[] grantResults) {
@@ -256,20 +238,6 @@ public class MainActivity extends BaseActivity implements OnActivityResultDelega
         }
         return grantResults[i];
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (!BuildConfig.DEBUG) {
-            DeveloperUtils.verifyApk(this, R.string.dex_crcs);
-        }
-        if (!DeveloperUtils.isActivityRegistered(this, ADActivity.class) ||
-                !DeveloperUtils.isServiceRegistered(this, DownloadService.class)) {
-            finish();
-        }
-
-    }
-
 
     @NonNull
     @Override
